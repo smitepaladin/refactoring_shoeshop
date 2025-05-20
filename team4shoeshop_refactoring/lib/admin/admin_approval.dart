@@ -392,10 +392,10 @@ ${approval['adate']} | ${approval['aeid']} | ${approval['pstock']}""",
 
     getJSONDataDelete(int aid)async{
     var response = await http.delete(Uri.parse("http://127.0.0.1:8000/a_delete/$aid"));
-    var result = json.decode(utf8.decode(response.bodyBytes))['result'];
-    if(result != "OK"){
-      errorSnackBar();
-    }
+    json.decode(utf8.decode(response.bodyBytes))['result'];
+    // if(result != "OK"){
+    //   errorSnackBar();
+    // }
     // print(data); // 데이터 잘 들어오는지 확인용
   }
 
