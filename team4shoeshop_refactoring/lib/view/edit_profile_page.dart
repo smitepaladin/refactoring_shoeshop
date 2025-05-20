@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:remedi_kopo/remedi_kopo.dart';
 import 'package:team4shoeshop_refactoring/view/shoeslistpage.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -20,13 +21,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final passwordController = TextEditingController();
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
-  final addressController = TextEditingController();
-  final detailAddressController = TextEditingController();
+  final addressController = TextEditingController(); // 최종 주소
+  final detailAddressController = TextEditingController(); // 상세 주소
   final cardNumController = TextEditingController();
   final cardCvcController = TextEditingController();
   final cardDateController = TextEditingController();
 
   String userId = '';
+  String basicAddress = '';
   bool isLoading = true;
 
   @override
@@ -52,6 +54,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       phoneController.text = data['cphone'] ?? '';
       emailController.text = data['cemail'] ?? '';
       addressController.text = data['caddress'] ?? '';
+
+      // 초기 로딩 시 address에서 기본주소 추출
+      final parts = addressController.text.split(' ');
+      basicAddress = parts.take(3).join(' '); // 대략 주소 앞 3단어로 추정
+      detailAddressController.text = addressController.text.replaceFirst(basicAddress, '').trim();
+
       cardNumController.text = (data['ccardnum'] ?? 0) != 0
           ? formatCardNumber(data['ccardnum'].toString())
           : '';
@@ -63,10 +71,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _combineAddress() {
-    final basic = addressController.text.trim();
     final detail = detailAddressController.text.trim();
-    final full = '$basic ${detail.isNotEmpty ? detail : ''}'.trim();
+    final full = '$basicAddress ${detail.isNotEmpty ? detail : ''}'.trim();
     addressController.text = full;
+  }
+
+  Future<void> _searchAddress() async {
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => RemediKopo()));
+    if (result is KopoModel && result.address != null) {
+      setState(() {
+        basicAddress = result.address!;
+        _combineAddress();
+      });
+    }
   }
 
   Future<void> _updateProfile() async {
@@ -182,9 +199,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   _buildField(emailController, '이메일'),
                   const SizedBox(height: 16),
-                  _buildField(addressController, '기본 주소'),
-                  _buildField(detailAddressController, '상세 주소', onChanged: (_) => _combineAddress()),
+
+                  /// 주소 검색 버튼
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          basicAddress.isNotEmpty
+                              ? basicAddress
+                              : '주소를 선택해주세요',
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _searchAddress,
+                        icon: const Icon(Icons.search),
+                        label: const Text('주소 검색'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildField(detailAddressController, '상세 주소',
+                      onChanged: (_) => _combineAddress()),
                   _buildField(addressController, '최종 주소 (자동완성)', readOnly: true),
+
                   const Divider(height: 32),
                   _buildField(
                     cardNumController,

@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
   void _showDialog(String name) {
     Get.defaultDialog(
       title: '환영합니다',
-      middleText: '$name 님, 신분이 확인되었습니다.',
+      middleText: '$name 님, 환영합니다.',
       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       barrierDismissible: false,
       actions: [

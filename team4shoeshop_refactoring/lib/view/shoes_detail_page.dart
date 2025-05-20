@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:team4shoeshop_refactoring/view/edit_profile_page.dart';
 import 'buy.dart';
 
 class ShoesDetailPage extends StatefulWidget {
@@ -72,10 +73,13 @@ class _ShoesDetailPageState extends State<ShoesDetailPage> {
     final res = await http.get(Uri.parse("http://127.0.0.1:8000/customer_info?cid=$cid"));
     final data = json.decode(utf8.decode(res.bodyBytes));
 
-    if (data["result"] != "OK" || data["ccardnum"] == 0 || data["ccardcvc"] == 0 || data["ccarddate"] == 0) {
+    if (data["result"] != "OK" ||
+        data["ccardnum"] == null ||
+        data["ccardcvc"] == null ||
+        data["ccarddate"] == null) {
       Get.snackbar("카드 정보 없음", "회원정보 수정이 필요합니다.");
       await Future.delayed(const Duration(seconds: 1));
-      Get.toNamed('/edit_profile');
+      Get.to(() => EditProfilePage());
       return;
     }
 

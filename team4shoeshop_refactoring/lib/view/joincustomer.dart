@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:remedi_kopo/remedi_kopo.dart';
 import 'package:team4shoeshop_refactoring/view/login.dart';
 
 class Joincustomer extends StatefulWidget {
@@ -18,16 +19,30 @@ class _JoincustomerState extends State<Joincustomer> {
   final TextEditingController cpasswordController = TextEditingController();
   final TextEditingController cphoneController = TextEditingController();
   final TextEditingController cemailController = TextEditingController();
-  final TextEditingController caddressController = TextEditingController(); // 최종 주소
-  final TextEditingController detailAddressController = TextEditingController(); // 상세 주소
+  final TextEditingController detailAddressController = TextEditingController();
+  final TextEditingController caddressController = TextEditingController();
 
+  String basicAddress = '';
   bool isCidChecked = false;
 
   void _combineAddress() {
-    final basic = caddressController.text.trim();
     final detail = detailAddressController.text.trim();
-    final full = '$basic ${detail.isNotEmpty ? detail : ''}'.trim();
+    final full = '$basicAddress ${detail.isNotEmpty ? detail : ''}'.trim();
     caddressController.text = full;
+  }
+
+  Future<void> _searchAddress() async {
+    KopoModel? model = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => RemediKopo()),
+    );
+
+    if (model != null && model.address != null) {
+      setState(() {
+        basicAddress = model.address!;
+        _combineAddress();
+      });
+    }
   }
 
   Future<void> checkCidDuplicate() async {
@@ -44,17 +59,13 @@ class _JoincustomerState extends State<Joincustomer> {
 
       if (data["result"] == "exists") {
         Get.snackbar('중복된 ID', '이미 사용 중인 ID입니다.', backgroundColor: Colors.orange, colorText: Colors.white);
-        setState(() {
-          isCidChecked = false;
-        });
-      } else if (data["result"] == "available") {
+        setState(() => isCidChecked = false);
+      } else {
         Get.snackbar('사용 가능', '사용 가능한 ID입니다.', backgroundColor: Colors.green, colorText: Colors.white);
-        setState(() {
-          isCidChecked = true;
-        });
+        setState(() => isCidChecked = true);
       }
     } catch (e) {
-      Get.snackbar("오류", "서버 통신 오류: $e", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("오류", "서버 오류: $e", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -111,23 +122,11 @@ class _JoincustomerState extends State<Joincustomer> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: cidController,
-                    decoration: InputDecoration(
-                      labelText: '아이디',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: const OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                    ),
-                    onChanged: (_) => setState(() => isCidChecked = false),
-                  ),
+                  child: _buildTextField(cidController, '아이디', Icons.person_outline,
+                      onChanged: (_) => setState(() => isCidChecked = false)),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: checkCidDuplicate,
-                  child: const Text('중복 확인'),
-                ),
+                ElevatedButton(onPressed: checkCidDuplicate, child: const Text('중복 확인')),
               ],
             ),
             const SizedBox(height: 16),
@@ -143,18 +142,26 @@ class _JoincustomerState extends State<Joincustomer> {
                 LengthLimitingTextInputFormatter(11),
                 PhoneNumberFormatter(),
               ],
-              decoration: InputDecoration(
-                labelText: '전화번호',
-                prefixIcon: const Icon(Icons.phone_android),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: Colors.grey[100],
-              ),
+              decoration: _inputDecoration('전화번호', Icons.phone_android),
             ),
             const SizedBox(height: 16),
             _buildTextField(cemailController, '이메일', Icons.email_outlined),
-            const SizedBox(height: 16),
-            _buildTextField(caddressController, '기본 주소', Icons.location_on),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    basicAddress.isNotEmpty ? basicAddress : '주소를 선택하세요.',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _searchAddress,
+                  icon: const Icon(Icons.search),
+                  label: const Text('주소 검색'),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             _buildTextField(detailAddressController, '상세 주소', Icons.home_outlined,
                 onChanged: (_) => _combineAddress()),
@@ -162,13 +169,7 @@ class _JoincustomerState extends State<Joincustomer> {
             TextField(
               controller: caddressController,
               readOnly: true,
-              decoration: InputDecoration(
-                labelText: '최종 주소',
-                prefixIcon: const Icon(Icons.check_circle_outline),
-                border: const OutlineInputBorder(),
-                filled: true,
-                fillColor: Colors.grey[200],
-              ),
+              decoration: _inputDecoration('최종 주소 (자동완성)', Icons.location_on, fillColor: Colors.grey[200]!),
             ),
             const SizedBox(height: 30),
             SizedBox(
@@ -179,9 +180,7 @@ class _JoincustomerState extends State<Joincustomer> {
                 label: const Text('가입하기', style: TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -197,28 +196,31 @@ class _JoincustomerState extends State<Joincustomer> {
       controller: controller,
       obscureText: obscure,
       onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey[100],
-      ),
+      decoration: _inputDecoration(label, icon),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon, {Color? fillColor}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: const OutlineInputBorder(),
+      filled: true,
+      fillColor: fillColor ?? Colors.grey[100],
     );
   }
 }
 
+// 전화번호 하이픈 자동 포맷터
 class PhoneNumberFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
     final buffer = StringBuffer();
-
     for (int i = 0; i < digits.length; i++) {
       buffer.write(digits[i]);
       if (i == 2 || i == 6) buffer.write('-');
     }
-
     final formatted = buffer.toString();
     return TextEditingValue(
       text: formatted.length > 13 ? formatted.substring(0, 13) : formatted,
