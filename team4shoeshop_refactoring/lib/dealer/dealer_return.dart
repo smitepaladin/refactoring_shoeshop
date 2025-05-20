@@ -33,12 +33,10 @@ class _DealerReturnState extends State<DealerReturn> {
     if (response.statusCode == 200) {
       final data = json.decode(utf8.decode(response.bodyBytes))['results'] ?? [];
 
-      // ✅ 내 지점 & 반품 아닌 것만 필터
-      final filtered = data.where((item) {
-        return item['oeid'].toString() == eid &&
-        item['oreturndate'] == null;
-      }).cast<Map<String, dynamic>>().toList();
-
+      final filtered = data
+      .where((item) => item['oeid'].toString() == eid)
+      .cast<Map<String, dynamic>>()
+      .toList();
       setState(() {
         orders = filtered;
       });
@@ -64,12 +62,12 @@ class _DealerReturnState extends State<DealerReturn> {
 
                 return Card(
                   margin: const EdgeInsets.all(10),
+                  color:  item['oreturndate'] != null ? Colors.red[300] : null,
                   child: ListTile(
-                    title: Text("상품: ${item['pbrand']} / ${item['ocount']}개"),
+                    title: Text("상품: ${item['pname']} / ${item['ocount']}개"),
                     subtitle: Text("주문일: ${item['odate']}"),
                     trailing: Text("₩$total"),
                     onTap: () async {
-              
                       final result = await Get.to(() => DealerReturnDetail(orderMap: item));
                       if (result == true) {
                         fetchOrders(); 

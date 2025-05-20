@@ -4,7 +4,6 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:team4shoeshop_refactoring/dealer/dealer_widget/dealer_widget.dart';
 
-
 class DealerMain extends StatefulWidget {
   const DealerMain({super.key});
 
@@ -63,14 +62,14 @@ void fetchOrderData() {
     Map<String, List<Map<String, dynamic>>> tempMap = {};
     for (var item in data) {
       String date = (item['odate'] ?? '').toString().substring(0, 10);
-      String brand = item['pbrand'] ?? '';
+      String name = item['pname'] ?? '';
       int count = item['ocount'] ?? 0;
       int price = item['pprice'] ?? 0;
       int total = price * count;
 
       tempMap.putIfAbsent(date, () => []);
       tempMap[date]!.add({
-        'name': brand,
+        'name': name,
         'count': count,
         'total': total,
       });

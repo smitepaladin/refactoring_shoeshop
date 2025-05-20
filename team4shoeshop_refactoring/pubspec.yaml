@@ -37,7 +37,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-    # 위치 정보
+  # 위치 정보
   geocoding: ^3.0.0
 
   # GPS 신호

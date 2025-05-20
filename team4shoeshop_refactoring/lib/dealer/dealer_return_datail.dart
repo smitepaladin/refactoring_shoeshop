@@ -68,9 +68,9 @@ class _DealerReturnDetailState extends State<DealerReturnDetail> {
         child: ListView(
           children: [
             Text('상품명: ${order['pname']}'),
-
           Text('주문일: ${order['odate']}'),
             Text('주문수량: ${order['ocount']}개'),
+            Text('원인 규명: ${order['odefectivereason'] ?? ''}'),
             const SizedBox(height: 20),
             TextField(
               controller: returnCountController,
@@ -90,6 +90,13 @@ class _DealerReturnDetailState extends State<DealerReturnDetail> {
               decoration: const InputDecoration(labelText: '원인 규명'),
             ),
             const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: (){
+                Get.back();
+              },
+
+            child: Text("취소"),style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.grey,),),
             ElevatedButton(
               onPressed: updateReturnInfo,
               child: const Text('저장'),
